@@ -10,34 +10,11 @@ from pyU.linalg.matrix import Matrix
 from pyU.linalg.vectors import Vector
 
 
-def lin_reg(data, return_err=False):
-    """
-    pass data as either [(x1,y1),..(xn,yn)] tuples or
-    [[x_points], [y_points]]
-    
-    Uses Normal equation  xTxA = xTy to solve for the coefficients
-    of the least squares line y = ax + b. Returns the vector (a, b)
-    and optionally, the sum of the squared error. """
-    if len(data) == 2:
-        data = zip(data[0], data[1])
-    
-    y = Matrix([[d[1] for d in data]]).transpose()
-    x = Matrix([[1, d[0]] for d in data])
-    xTx = x.transpose() * x
-    xTy = x.transpose() * y
-    A = xTx.solve(xTy)
-    if return_err:
-        y_hat = x * Matrix(A._as_col)
-        err = (y - y_hat).transpose() * (y - y_hat)        
-        return A, err[0][0]
-    return A
-    
-
-def least_squares(data, deg=1, return_err=False):
+def least_squares(data, deg=1):
     """
     Uses Normal equation  xTxA = xTy to solve for the coefficients
     of least squares. Uses a polynomial of degree deg. 
-    Optionally returns the sum of the squared error. 
+    Returns polynomial coefficients, residuals, and r^2 error
     
     pass data as either [(x1,y1),..(xn,yn)] tuples or
     [[x_points], [y_points]]
@@ -50,11 +27,40 @@ def least_squares(data, deg=1, return_err=False):
     xTx = x.transpose() * x
     xTy = x.transpose() * y
     A = xTx.solve(xTy)
-    if return_err:
-        y_hat = x * Matrix(A._as_col)
-        err = (y - y_hat).transpose() * (y - y_hat)        
-        return A, y_hat, y,err[0][0]
-    return A
+    y_hat = x * Matrix(A._as_col)
+    residual = y - y_hat
+    err = residual.transpose() * residual     
+    return A, residual ,err[0][0]
     
-
+class OLS(object):
     
+    def __init__(self, data):
+        self.data = data
+        self.regs = {}
+    
+    def coeffs(self, deg=1):
+        if deg in self.regs:
+            return self.regs[deg][0]
+        ls = least_squares(self.data, deg=deg)
+        self.regs[deg] = ls
+        return ls[0]
+    
+    def error(self, deg=1):
+        if deg in self.regs:
+            return self.regs[deg][2]
+        ls = least_squares(self.data, deg=deg)
+        self.regs[deg] = ls
+        return ls[2]
+    
+    def residual(self, deg=1):
+        if deg in self.regs:
+            return self.regs[deg][1]
+        ls = least_squares(self.data, deg=deg)
+        self.regs[deg] = ls
+        return ls[1]
+        
+    def func(self, deg=1):
+        y = self.coeffs(deg=deg)
+        f = lambda x: sum([x**i * y[i] for i in xrange(len(y))])
+        return f
+        
