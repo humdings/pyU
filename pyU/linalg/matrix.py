@@ -7,15 +7,6 @@ class DimensionError(Exception):
     pass
 
 
-def dot(a, b):
-    """gives a dot product of 2 vectors in a python list"""
-    if not len(a) == len(b):
-        raise DimensionError()
-    return sum(x * y for x, y in zip(a, b))
-        
-
-
-
 class Matrix(object):
     
     """A list containg the row vectors of a Matrix"""
@@ -272,6 +263,7 @@ class Zero(Matrix):
         Z = [[0.]*n]*n 
         super(Zero, self).__init__(Z)
 
+
 class PermutationMatrix(Matrix):
     """ A permutation matrix for the input matrix. """
     def __init__(self, aMatrix):
@@ -289,55 +281,4 @@ class PermutationMatrix(Matrix):
                 _I.permute(j, row)
                 self.n_perms += 1
         super(PermutationMatrix, self).__init__(_I.rows)
-
-    
-def randMatrix(m, n, round_to=3):
-    M = []
-    for _ in xrange(m):
-        row = []
-        for __ in xrange(n):
-            factor = random.random()
-            number = random.randint(-100, 100)
-            row.append(round(number * factor, round_to))
-        M.append(row)
-    return Matrix(M)
-
-
- 
-def matrixMul(A, B):
-    TB = zip(*B)
-    return [[sum(ea*eb for ea,eb in zip(a,b)) for b in TB] for a in A]
- 
-        
-def lu(A):
-    """Decomposes a nxn matrix A by PA=LU and returns L, U and P."""
-    n = len(A)
-    L = [[0.0] * n for i in xrange(n)]
-    U = [[0.0] * n for i in xrange(n)]
-    P = pivotize(A)
-    A2 = matrixMul(P, A)
-    for j in xrange(n):
-        L[j][j] = 1.0
-        for i in xrange(j+1):
-            s1 = sum(U[k][j] * L[i][k] for k in xrange(i))
-            U[i][j] = A2[i][j] - s1
-        for i in xrange(j, n):
-            s2 = sum(U[k][j] * L[i][k] for k in xrange(j))
-            L[i][j] = (A2[i][j] - s2) / U[j][j]
-    return (L, U, P)
- 
-       
-def pivotize(m):
-    """Creates the pivoting matrix for m."""
-    n = len(m)
-    ID = [[float(i == j) for i in xrange(n)] for j in xrange(n)]
-    for j in xrange(n):
-        row = max(xrange(j, n), key=lambda i: m[i][j])
-        print row
-        if j != row:
-            ID[j], ID[row] = ID[row], ID[j]
-    return ID
-
-
-
 
