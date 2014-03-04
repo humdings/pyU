@@ -1,15 +1,14 @@
 from __future__ import division
 import random
-from vectors import Vector
 
+from pyU.linalg.vectors import Vector
+from pyU.linalg.utils import DimensionError
 
-class DimensionError(Exception):
-    pass
 
 
 class Matrix(object):
     
-    """A list containg the row vectors of a Matrix"""
+    """ A Matrix initialized with a list of row vectors. """
     
     def __init__(self, vectors):
         self.rows = [Vector(i) for i in vectors]
@@ -49,8 +48,6 @@ class Matrix(object):
         Uses the definition of Matrix equality:
             1. Matrices must be the same size.
             2. A(i,j) = B(i,j) for every component (i,j)
-        
-        Relys on list equality to compare entire rows at once.
         """
         if not type(B) == Matrix:
             B = Matrix(B)
@@ -107,7 +104,7 @@ class Matrix(object):
             B = Matrix(B)
         if not self.ncols == B.nrows:
             raise DimensionError()
-        rows = [[dot(row, col) for col in B.columns] for row in self]
+        rows = [[row.dot(col) for col in B.columns] for row in self]
         return Matrix(rows)
     
     def _scale_by(self, scalar):
@@ -126,16 +123,24 @@ class Matrix(object):
         return map(lambda x: x * scalar, r)
     
     def _validate(self):
+        ''' Raise an error if any rows are different sizes. '''
         s = set(len(row) for row in self.rows)
         if not len(s) == 1:
             raise DimensionError()
         
     def comp(self, i, j):
-        """ NOTE: indexing starts at zero"""
+        ''' i,jth component ''' 
         return self[i][j]
     
     def transpose(self):
         return Matrix(self.columns)
+    
+    def main_diag(self):
+        n = min(self.nrows, self.ncols)
+        return Vector([self[i][i] for i in range(n)])
+    
+    def trace(self):
+        return sum(self.main_diag())
 
     #############################
     # Elementary Row Operations #
@@ -183,8 +188,7 @@ class Matrix(object):
             b *= PLU[1][i][i]
             b *= PLU[2][i][i]
         return a * b
-            
-    
+        
     def lu_decomp(self):
         """
         returns (P, L, U) such that P*self = L*U.
@@ -216,21 +220,18 @@ class Matrix(object):
             b = Matrix(b._as_col)
         else:
             b = Matrix(Vector(b)._as_col)
-            #b = Matrix([Vector(b)]).transpose()      # make sure b is a vector
-        # else:
-        #     b = Matrix([b]).transpose()
         if self.PLU is not None:
             PLU = self.PLU
         else:
             PLU = self.lu_decomp()
         P, L, U = PLU
-        n = self.nrows        
-        # Need to solve Ly = b for y, where y = Ux 
+        #if L.main_diag.vector.count(0) or P.main_diag.vector.count(0):
+        #    raise ValueError("there was a zero along a diagonal")
+        n = self.nrows
+            
+        # Solve Ly = b for y, where y = Ux 
         b = Vector(zip(*(P * b))[0])
         
-        #for i in xrange(n):
-        #    if P[i][i] == 0 or L[i][i] == 0:
-        #        raise ValueError("there was a zero along a diagonal")
         y_0 = b[0] / L[0][0] 
         y = [y_0]
         for i in xrange(1,n):
@@ -281,4 +282,31 @@ class PermutationMatrix(Matrix):
                 _I.permute(j, row)
                 self.n_perms += 1
         super(PermutationMatrix, self).__init__(_I.rows)
+
+
+def randMatrix(m, n, round_to=3):
+    M = []
+    for _ in xrange(m):
+        row = []
+        for __ in xrange(n):
+            factor = random.random()
+            number = random.randint(-100, 100)
+            row.append(round(number * factor, round_to))
+        M.append(row)
+    return Matrix(M)         
+
+def gram_schmidt(S, normalize=True):
+    """
+    Gram Schmidt ortho/orthonormalize a set of vectors
+    """
+    S = Matrix(S)
+    s = [S[0]]
+    for i in xrange(1, len(S.rows)):
+        ui = S[i]
+        for j in xrange(i):
+            ui -= ui.proj_onto(s[j])
+        s.append(ui)
+    if normalize:
+        return Matrix([i*(1./i.magnitude()) for i in s])
+    return Matrix(s)
 
