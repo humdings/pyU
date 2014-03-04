@@ -4,17 +4,14 @@ Created on Thu Nov 21 19:59:09 2013
 
 @author: David Edwards
 """
-import random
 
 from pyU.linalg.matrix import Matrix
-from pyU.linalg.vectors import Vector
 
 
 def least_squares(data, deg=1):
     """
     Uses Normal equation  xTxA = xTy to solve for the coefficients
-    of least squares. Uses a polynomial of degree deg. 
-    Returns polynomial coefficients, residuals, and r^2 error
+    of least squares. Returns polynomial coefficients, residuals, and r^2 error
     
     pass data as either [(x1,y1),..(xn,yn)] tuples or
     [[x_points], [y_points]]
@@ -31,14 +28,20 @@ def least_squares(data, deg=1):
     residual = y - y_hat
     err = residual.transpose() * residual     
     return A, residual ,err[0][0]
-    
+
+
 class OLS(object):
+    
+    '''
+    Ordinary Least squares regression for polynomial fitting. 
+    '''
     
     def __init__(self, data):
         self.data = data
         self.regs = {}
     
     def coeffs(self, deg=1):
+        ''' polynomial Coefficients '''
         if deg in self.regs:
             return self.regs[deg][0]
         ls = least_squares(self.data, deg=deg)
@@ -46,6 +49,7 @@ class OLS(object):
         return ls[0]
     
     def error(self, deg=1):
+        ''' R^2 error '''
         if deg in self.regs:
             return self.regs[deg][2]
         ls = least_squares(self.data, deg=deg)
@@ -60,6 +64,7 @@ class OLS(object):
         return ls[1]
         
     def func(self, deg=1):
+        ''' The regression polynomial as a function of x. '''
         y = self.coeffs(deg=deg)
         f = lambda x: sum([x**i * y[i] for i in xrange(len(y))])
         return f

@@ -1,9 +1,6 @@
 
 from math import sqrt, acos, degrees, pi
-
-
-class DimensionError(Exception):
-    pass
+from pyU.linalg.utils import DimensionError
 
 
 class BaseVector(object):

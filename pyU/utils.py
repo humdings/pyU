@@ -23,9 +23,10 @@ def sIntegral(f, a, b, n=10000):
     return s * (f(a) + f(b) + I) / 3.
 
 
-def sig_figs(x, sig=2):
+def sig_figs(x, sigfigs=5):
+    ''' Rounds x to a number of sigfigs '''
     if x == 0:
         return 0
     sign = x / abs(x)
     x = abs(x)
-    return round(x, sig-int(floor(log10(x)))-1) * sign
+    return round(x, sigfigs-int(floor(log10(x)))-1) * sign

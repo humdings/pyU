@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 import random
-from matrix import *
+from pyU.linalg.matrix import *
 import unittest
-from utils import sig_figs
+from pyU.utils import sig_figs
 
 
 
@@ -30,6 +31,7 @@ print "Test conducted using %s x %s Matrices"%(n,n)
 print
 print "=============================================="
 print
+
 class MatrixTest(unittest.TestCase):
     
     def test_solve(self, epsilon=epsilon):
@@ -56,8 +58,7 @@ class MatrixTest(unittest.TestCase):
                 self.assertAlmostEqual(
                     np_ans[i][j], matans[i][j], places=dec_places
                 )
-        
-    
+
     def test_multiplication(self):
         np_ans = np_matA.dot(np_matB)
         matans = matA * matB
